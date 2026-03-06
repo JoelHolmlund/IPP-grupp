@@ -8,6 +8,7 @@ import {
   TextInput,
   ScrollView,
   Pressable,
+  Image,
 } from "react-native";
 import * as Location from "expo-location";
 import React, { useState, useEffect, useMemo } from "react";
@@ -19,6 +20,8 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { MapPin, Star, Search, ChevronRight } from "lucide-react-native";
+
+const SCOOTER_MARKER = require("../../assets/images/scooter-outline.png");
 import { useRouter } from "expo-router";
 import { fetchParkeringar, withDistances } from "../../lib/parkeringar";
 import { startSession } from "../../lib/parking-session";
@@ -176,9 +179,15 @@ export default function HittaScreen() {
             coordinate={{ latitude: p.latitude, longitude: p.longitude }}
             title={p.name}
             description={p.zone_code}
-            pinColor="#166534"
+            anchor={{ x: 0.5, y: 1 }}
             onPress={() => handleSelectParking(p)}
-          />
+          >
+            <Image
+              source={SCOOTER_MARKER}
+              style={styles.markerImage}
+              resizeMode="contain"
+            />
+          </Marker>
         ))}
       </MapView>
 
@@ -284,6 +293,11 @@ export default function HittaScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  markerImage: {
+    width: 40,
+    height: 48,
+    tintColor: "#2D5A27",
   },
   loading: {
     flex: 1,

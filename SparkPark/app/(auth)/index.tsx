@@ -6,20 +6,42 @@ import {
   View,
   Text,
   Pressable,
+  TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Dimensions,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { router } from "expo-router";
-import { Mail, Lock } from "lucide-react-native";
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react-native";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const SCOOTER_LOGO = require("../../assets/images/scooter-outline.png");
+
+const C = {
+  green: "#2D5A27",
+  greenDark: "#1E3E1B",
+  lime: "#A2FF00",
+  white: "#FFFFFF",
+  offWhite: "#F7F9F7",
+  textDark: "#1A1C1A",
+  textMuted: "#6B7280",
+  border: "#E2E8E0",
+  inputBg: "#F3F5F3",
+} as const;
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function signInWithEmail() {
     if (!email.trim() || !password) {
@@ -40,175 +62,343 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+    <View style={styles.root}>
+      {/* Grön hero med logotyp */}
+      <View style={styles.heroSection}>
+        <SafeAreaView edges={["top"]} style={styles.heroSafe}>
+          <View style={styles.heroCircle1} />
+          <View style={styles.heroCircle2} />
+          <View style={styles.heroCircle3} />
+
+          <View style={styles.heroContent}>
+            <View style={styles.logoWrap}>
+              <Image
+                source={SCOOTER_LOGO}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.heroTitle}>SparkPark</Text>
+            <Text style={styles.heroSubtitle}>
+              Smidig parkering för elsparkcyklar
+            </Text>
+          </View>
+        </SafeAreaView>
+        <View style={styles.heroCurve} />
+      </View>
+
+      {/* Formulär */}
       <KeyboardAvoidingView
-        style={styles.keyboard}
+        style={styles.formSection}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={styles.formScroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.header}>
-            <Text style={styles.logo}>SparkPark</Text>
-            <Text style={styles.subtitle}>Logga in på ditt konto</Text>
+          <Text style={styles.formTitle}>Välkommen tillbaka</Text>
+          <Text style={styles.formSubtitle}>Logga in för att fortsätta</Text>
+
+          <Text style={styles.label}>E-post</Text>
+          <View style={[styles.inputWrap, emailFocused && styles.inputFocused]}>
+            <Mail
+              size={18}
+              color={emailFocused ? C.green : C.textMuted}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="namn@exempel.se"
+              placeholderTextColor="#B0B5B0"
+              value={email}
+              onChangeText={setEmail}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
           </View>
 
-          <View style={styles.card}>
-            <View style={styles.inputWrap}>
-              <Mail size={20} color="#6b7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="E-postadress"
-                placeholderTextColor="#9ca3af"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-            <View style={styles.inputWrap}>
-              <Lock size={20} color="#6b7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Lösenord"
-                placeholderTextColor="#9ca3af"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-            </View>
-
-            <Pressable
-              style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
-              onPress={signInWithEmail}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
+          <Text style={styles.label}>Lösenord</Text>
+          <View style={[styles.inputWrap, passwordFocused && styles.inputFocused]}>
+            <Lock
+              size={18}
+              color={passwordFocused ? C.green : C.textMuted}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Ange ditt lösenord"
+              placeholderTextColor="#B0B5B0"
+              value={password}
+              onChangeText={setPassword}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
+              secureTextEntry={!showPassword}
+            />
+            <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8}>
+              {showPassword ? (
+                <EyeOff size={18} color={C.textMuted} />
               ) : (
-                <Text style={styles.primaryBtnText}>Logga in</Text>
+                <Eye size={18} color={C.textMuted} />
               )}
             </Pressable>
-
-            <Pressable
-              style={styles.linkWrap}
-              onPress={() => router.push("/(auth)/forgot-password")}
-              disabled={loading}
-            >
-              <Text style={styles.link}>Glömt lösenord?</Text>
-            </Pressable>
           </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Har du inget konto? </Text>
-            <Pressable onPress={() => router.push("/(auth)/register")} disabled={loading}>
-              <Text style={styles.footerLink}>Registrera dig</Text>
-            </Pressable>
+          <Pressable
+            style={styles.forgotWrap}
+            onPress={() => router.push("/(auth)/forgot-password")}
+            disabled={loading}
+          >
+            <Text style={styles.forgotText}>Glömt lösenord?</Text>
+          </Pressable>
+
+          <TouchableOpacity
+            onPress={signInWithEmail}
+            disabled={loading}
+            activeOpacity={0.85}
+            style={[styles.loginBtn, loading && styles.loginBtnDisabled]}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color={C.white} />
+            ) : (
+              <>
+                <Text style={styles.loginBtnText}>Logga in</Text>
+                <View style={styles.loginBtnArrow}>
+                  <ArrowRight size={20} color={C.green} strokeWidth={2.5} />
+                </View>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>eller</Text>
+            <View style={styles.dividerLine} />
           </View>
+
+          <TouchableOpacity
+            onPress={() => router.push("/(auth)/register")}
+            disabled={loading}
+            activeOpacity={0.85}
+            style={styles.registerBtn}
+          >
+            <Text style={styles.registerBtnText}>Skapa nytt konto</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
+const HERO_HEIGHT = 280;
+
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: C.white,
   },
-  keyboard: {
+  heroSection: {
+    height: HERO_HEIGHT,
+    backgroundColor: C.green,
+    overflow: "hidden",
+  },
+  heroSafe: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 24,
-    paddingTop: 48,
+  heroCircle1: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    top: -60,
+    right: -40,
+  },
+  heroCircle2: {
+    position: "absolute",
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    top: 40,
+    left: -50,
+  },
+  heroCircle3: {
+    position: "absolute",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(162,255,0,0.12)",
+    bottom: 60,
+    right: 30,
+  },
+  heroContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: 30,
+  },
+  logoWrap: {
+    width: 80,
+    height: 80,
+    marginBottom: 14,
+    alignItems: "center",
     justifyContent: "center",
   },
-  header: {
-    marginBottom: 32,
+  logoImage: {
+    width: "100%",
+    height: "100%",
+    tintColor: C.white,
   },
-  logo: {
-    fontSize: 32,
+  heroTitle: {
+    fontSize: 28,
     fontWeight: "800",
-    color: "#166534",
+    color: C.white,
     letterSpacing: -0.5,
   },
-  subtitle: {
-    fontSize: 16,
-    color: "#6b7280",
-    marginTop: 8,
+  heroSubtitle: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.85)",
+    marginTop: 4,
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+  heroCurve: {
+    position: "absolute",
+    bottom: -1,
+    left: 0,
+    right: 0,
+    height: 32,
+    backgroundColor: C.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+  },
+  formSection: {
+    flex: 1,
+    backgroundColor: C.white,
+  },
+  formScroll: {
+    paddingHorizontal: 28,
+    paddingTop: 8,
+    paddingBottom: 40,
+  },
+  formTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: C.textDark,
+  },
+  formSubtitle: {
+    fontSize: 14,
+    color: C.textMuted,
+    marginTop: 4,
+    marginBottom: 28,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: C.textDark,
+    marginBottom: 8,
+    marginLeft: 4,
   },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9fafb",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    marginBottom: 16,
-    paddingHorizontal: 14,
+    backgroundColor: C.inputBg,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: C.border,
+    marginBottom: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  inputFocused: {
+    borderColor: C.green,
+    backgroundColor: C.white,
+    shadowColor: C.green,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    color: "#111",
-    paddingVertical: 14,
+    fontSize: 15,
+    color: C.textDark,
+    paddingVertical: 0,
   },
-  primaryBtn: {
-    backgroundColor: "#166534",
-    borderRadius: 12,
-    paddingVertical: 16,
+  forgotWrap: {
+    alignSelf: "flex-end",
+    marginBottom: 24,
+    marginTop: -4,
+  },
+  forgotText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: C.green,
+  },
+  loginBtn: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    justifyContent: "center",
+    backgroundColor: C.green,
+    borderRadius: 14,
+    paddingVertical: 18,
+    marginBottom: 4,
+    shadowColor: C.green,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  primaryBtnDisabled: {
+  loginBtnDisabled: {
     opacity: 0.7,
   },
-  primaryBtnText: {
+  loginBtnText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
+    fontWeight: "700",
+    color: C.white,
+    letterSpacing: 0.3,
   },
-  linkWrap: {
+  loginBtnArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: C.lime,
     alignItems: "center",
-    marginTop: 16,
-  },
-  link: {
-    fontSize: 14,
-    color: "#166534",
-    fontWeight: "500",
-  },
-  footer: {
-    flexDirection: "row",
     justifyContent: "center",
+    marginLeft: 12,
+  },
+  dividerRow: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 32,
-    flexWrap: "wrap",
+    marginVertical: 24,
   },
-  footerText: {
-    fontSize: 15,
-    color: "#6b7280",
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: C.border,
   },
-  footerLink: {
+  dividerText: {
+    fontSize: 13,
+    color: C.textMuted,
+    marginHorizontal: 16,
+  },
+  registerBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+    paddingVertical: 16,
+    borderWidth: 1.5,
+    borderColor: C.green,
+    backgroundColor: C.white,
+  },
+  registerBtnText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#166534",
+    color: C.green,
   },
 });
